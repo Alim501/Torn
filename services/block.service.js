@@ -1,6 +1,6 @@
 const prisma = require("../db");
 const { defaultTronWeb } = require('../utils/tron');
-
+const transactionService = require("../services/transaction.service");
 
 async function getBlockFromTron(number) {
   const block = await defaultTronWeb.trx.getBlockByNumber(number);
@@ -21,8 +21,14 @@ async function getAllBlocks() {
 }
 
 async function saveBlockToDb(block) {
-  const { blockID, block_header, transactions = [] } = block; 
+  const { blockID, block_header, transactions = [] } = block;
   const raw = block_header.raw_data;
+
+  const txPromises = transactions.map((tx) =>
+    transactionService.saveTransactionToDb(tx)
+  );
+
+  const formattedTransactions = await Promise.all(txPromises);
 
   return prisma.block.create({
     data: {
@@ -34,21 +40,15 @@ async function saveBlockToDb(block) {
       timestamp: new Date(raw.timestamp),
       witnessSignature: block_header.witness_signature,
       transactions: {
-        create: transactions.map((tx) => ({
-          id: tx.txID,
-          timestamp: tx.raw_data?.timestamp
-            ? new Date(tx.raw_data.timestamp)
-            : null,
-          expiration: tx.raw_data?.expiration
-            ? new Date(tx.raw_data.expiration)
-            : null,
-          contractType: tx.raw_data?.contract?.[0]?.type || null,
-          rawData: tx.raw_data,
-          signature: tx.signature || [],
-        })),
+        create: formattedTransactions,
       },
     },
   });
+}
+
+const TronWeb = require('tronweb');
+function toHexAddress(hex) {
+  return TronWeb.address.fromHex(hex);
 }
 
 async function checkIfBlockExists(blockID) {

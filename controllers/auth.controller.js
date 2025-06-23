@@ -28,10 +28,21 @@ async function getMe(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+async function getBalance(req, res) {
+  const { address,privateKey } = req.user;
+  
+  try {
+    const balance = await authService.getBalance(address,privateKey);
+    res.json(balance);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
 
 
 module.exports = {
   login,
   register,
-  getMe
+  getMe,
+  getBalance
 };

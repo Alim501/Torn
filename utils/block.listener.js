@@ -1,4 +1,3 @@
-const { defaultTronWeb } = require('../utils/tron');
 const blockService = require("../services/block.service");
 
 async function pollNewBlocks() {

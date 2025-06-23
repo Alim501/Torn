@@ -58,17 +58,30 @@ async function getMe(id) {
     
 }
 
-function getPrivateKeyByEmail(email) {
-    const user = prisma.user.findUnique({
-        where: { email },
-    });
+async function getUserInfo(email) {
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('Пользователь не найден');
-  return user.privateKey;
+
+  return {
+    adress: user.adress,
+    privateKey: user.privateKey,
+  };
+}
+
+async function getBalance(adress, privateKey) {
+  const tronWeb = getUserTronWeb(privateKey);
+  const balanceInSun = await tronWeb.trx.getBalance(adress);
+  const balance = tronWeb.fromSun(balanceInSun);
+  return {
+    adress: adress,
+    balance: parseFloat(balance),
+  };
 }
 
 module.exports = {
   register,
   login,
   getMe,
-  getPrivateKeyByEmail,
+  getUserInfo,
+  getBalance,
 };

@@ -17,7 +17,11 @@ async function authGuard(req, res, next) {
       where: { email: payload.email },
     });
     console.log("user",user);
-    req.user = user; 
+      req.user = {
+      email: user.email,
+      address: user.adress,
+      privateKey: user.privateKey, 
+    };
     next();
   } catch (err) {
     res.status(401).json({ error: 'Неверный или просроченный токен' });

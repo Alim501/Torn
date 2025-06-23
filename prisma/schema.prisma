@@ -43,4 +43,8 @@ model Transaction {
   contractType    String?
   rawData         Json?
   signature       Json?
+  fromAddress     String?
+  toAddress       String?
+  amount          Float?
 }
+
